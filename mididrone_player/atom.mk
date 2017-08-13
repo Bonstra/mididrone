@@ -6,11 +6,19 @@ LOCAL_CATEGORY_PATH := mididrone
 LOCAL_DESCRIPTION := Play a MIDI file on the drone
 LOCAL_SRC_FILES := \
 	mididrone_player.cpp \
-	stdout_driver.cpp \
-	pwm_driver.cpp
+	stdout_driver.cpp
+
 LOCAL_LIBRARIES := portsmf
-LOCAL_DEPENDS_HEADERS := linux
 LOCAL_CFLAGS := -std=gnu99
 LOCAL_CXXFLAGS := -std=c++0x
+
+ifeq ("$(TARGET_CPU)","p6i")
+LOCAL_DEPENDS_HEADERS := linux
+LOCAL_CFLAGS += -DUSE_MINIDRONES_PWM_DRIVER
+
+LOCAL_SRC_FILES += \
+	pwm_driver.cpp
+endif
+
 include $(BUILD_EXECUTABLE)
 

@@ -165,7 +165,11 @@ int main(int argc, char* argv[])
 	init_time();
 	Alg_seq seq(argv[1], true);
 	seq.convert_to_seconds();
+#ifdef USE_MINIDRONES_PWM_DRIVER
 	Driver* driver = new PwmDriver();
+#else
+	Driver* driver = new StdoutDriver();
+#endif
 
 	printf("Playing: %s\n", argv[1]);
 	printf("Available channels: %i\n", driver->channels());
