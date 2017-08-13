@@ -8,7 +8,8 @@ LOCAL_SRC_FILES := \
 	mididrone.cpp \
 	stdout_driver.cpp \
 	pwm_driver.cpp
-LOCAL_LIBRARIES := portsmf linux
+LOCAL_LIBRARIES := portsmf
+LOCAL_DEPENDS_HEADERS := linux
 LOCAL_CFLAGS := -std=gnu99
 LOCAL_CXXFLAGS := -std=c++0x
 include $(BUILD_EXECUTABLE)
