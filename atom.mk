@@ -1,11 +1,11 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := mididrone
-LOCAL_CATEGORY_PATH := tools
+LOCAL_MODULE := mididrone_player
+LOCAL_CATEGORY_PATH := mididrone
 LOCAL_DESCRIPTION := Play a MIDI file on the drone
 LOCAL_SRC_FILES := \
-	mididrone.cpp \
+	mididrone_player.cpp \
 	stdout_driver.cpp \
 	pwm_driver.cpp
 LOCAL_LIBRARIES := portsmf
