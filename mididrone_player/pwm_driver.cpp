@@ -77,9 +77,10 @@ bool PwmDriver::setChannelState(int idx, ChannelState state)
 	chan = state;
 	chan.busy = true;
 
-	res = ioctl(mFds[idx], PWM_STOP, 0);
+	pwmdata = 0;
+	res = ioctl(mFds[idx], PWM_SET_WIDTH, &pwmdata);
 	if (res == -1) {
-		printf("ioctl PWM_STOP failed: %s\n", strerror(errno));
+		printf("ioctl PWM_SET_WIDTH failed: %s\n", strerror(errno));
 	}
 
 	pwmdata = state.freq;
@@ -105,8 +106,15 @@ bool PwmDriver::setChannelState(int idx, ChannelState state)
 void PwmDriver::releaseChannel(int idx)
 {
 	int res;
+	int pwmdata;
 	mChans[idx].busy = false;
 	mChans[idx].lchannel = -1;
+
+	pwmdata = 0;
+	res = ioctl(mFds[idx], PWM_SET_WIDTH, &pwmdata);
+	if (res == -1) {
+		printf("ioctl PWM_SET_WIDTH failed: %s\n", strerror(errno));
+	}
 
 	res = ioctl(mFds[idx], PWM_STOP, 0);
 	if (res == -1) {
