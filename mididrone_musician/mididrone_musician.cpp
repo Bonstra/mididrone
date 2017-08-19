@@ -131,7 +131,7 @@ static void schedule_timer(double ts)
 			delay_min = 0;
 		} else {
 			long drv_delay = (driver_ts - ts) * 1000.0;
-			if (drv_delay < delay_min)
+			if (delay_min < 0 || drv_delay < delay_min)
 				delay_min = drv_delay;
 		}
 	}
