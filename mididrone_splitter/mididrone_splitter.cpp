@@ -53,7 +53,7 @@ static void split(Alg_seq &seq)
 	bend_attr = symbol_table.insert_string("bendr") + 1;
 	program_attr = symbol_table.insert_string("programi") + 1;
 
-	SimpleDispatcher disp(4);
+	ChannelDispatcher disp(4);
 
 	Alg_iterator iterator(&seq, true);
 	iterator.begin();
