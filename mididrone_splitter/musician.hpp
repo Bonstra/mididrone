@@ -14,6 +14,7 @@ private:
 public:
 	Musician(unsigned int max_notes);
 	Musician(const Musician& mus);
+	Musician& operator= (const Musician& mus);
 	~Musician();
 	unsigned int maxNotes();
 	unsigned int usedNotes();

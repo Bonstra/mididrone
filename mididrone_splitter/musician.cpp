@@ -40,6 +40,19 @@ Musician::Musician(const Musician& mus) :
 	}
 }
 
+Musician& Musician::operator= (const Musician& mus)
+{
+	max_notes = mus.max_notes;
+	delete seq;
+	seq = new Alg_seq(mus.seq);
+	delete[] note_states;
+	note_states = new MusicianNoteState[mus.max_notes];
+	for (unsigned int i = 0; i < max_notes; i ++) {
+		note_states[i] = mus.note_states[i];
+	}
+	return *this;
+}
+
 unsigned int Musician::maxNotes()
 {
 	return max_notes;
@@ -72,7 +85,7 @@ bool Musician::playNote(const Alg_event_ptr evt)
 	if (idx >= max_notes)
 		return false;
 
-	Alg_note_ptr note(static_cast<Alg_note_ptr>(evt));
+	Alg_note_ptr note(dynamic_cast<Alg_note_ptr>(evt));
 	MusicianNoteState& state(note_states[idx]);
 	state.busy = true;
 	state.note = note->get_identifier();
