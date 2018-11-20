@@ -131,3 +131,111 @@ void ChannelDispatcher::final_note_off(const Alg_note_ptr note)
 	}
 }
 
+PriorityChannelDispatcher::PriorityChannelDispatcher(unsigned int polyphony) :
+	Dispatcher(),
+	polyphony(polyphony)
+{
+}
+
+PriorityChannelDispatcher::~PriorityChannelDispatcher()
+{
+}
+
+PriorityChannelDispatcher::RuledMusician::RuledMusician(unsigned int polyphony,
+		PriorityChannelRule* rule) :
+	rule(rule),
+	musician(polyphony)
+{
+}
+
+bool PriorityChannelDispatcher::RuledMusician::operator<(const RuledMusician& b)
+{
+	// RuledMusicians are sorted by priority (lower priority first).
+	// Musicians without rule are lower in rank than any musician with a
+	// rule.
+	if (this->rule && b.rule)
+		return this->rule->priority < b.rule->priority;
+	if (b.rule)
+		return true;
+	return false;
+}
+
+void PriorityChannelDispatcher::appendRule(unsigned int priority,
+		std::set<unsigned int> channels,
+		bool exclusive)
+{
+	auto rule = new PriorityChannelRule();
+	rule->priority = priority;
+	rule->channels = channels;
+	rule->exclusive = exclusive;
+
+	musicians.push_back(RuledMusician(polyphony, rule));
+	musicians.sort();
+}
+
+bool PriorityChannelDispatcher::playNoteByTheRules(const Alg_event_ptr evt)
+{
+	Alg_note_ptr note(static_cast<Alg_note_ptr>(evt));
+
+	// Iterate in reverse order so we try musicians with the higher
+	// priority first.
+	for (auto it = musicians.rbegin(); it != musicians.rend(); ++it) {
+		if (!it->rule)
+			return false;
+
+		if (it->rule->channels.count((unsigned int)note->chan) != 0) {
+			if (it->musician.playNote(evt))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool PriorityChannelDispatcher::playNoteFifo(const Alg_event_ptr evt)
+{
+	// Iterate in normal order so that the musicians with the higher
+	// priority are less affected by the notes added in FIFO mode.
+	for (auto it = musicians.begin(); it != musicians.end(); ++it) {
+		if ((*it).rule && (*it).rule->exclusive)
+			continue;
+		if ((*it).musician.playNote(evt))
+			return true;
+	}
+	return false;
+}
+
+void PriorityChannelDispatcher::playNote(const Alg_event_ptr evt)
+{
+	if (!evt->is_note())
+		return;
+
+	if (!playNoteByTheRules(evt) && !playNoteFifo(evt)) {
+		// Not enough musicians to play this note, spawn a new one.
+		musicians.push_front(RuledMusician(polyphony));
+		// Ugly hack to force the new musician to play the note
+		musicians.front().musician.playNote(evt);
+	}
+}
+
+void PriorityChannelDispatcher::stopNote(const Alg_event_ptr evt)
+{
+	if (!evt->is_note())
+		return;
+
+	for (auto it = musicians.begin(); it != musicians.end(); ++it) {
+		if ((*it).musician.stopNote(evt))
+			return;
+	}
+}
+
+void PriorityChannelDispatcher::finalize()
+{
+	unsigned int idx = 0;
+	for (auto it = musicians.rbegin(); it != musicians.rend(); ++it) {
+		char filename[64];
+		snprintf(filename, sizeof(filename), "drone_%.2d.mid", idx);
+		(*it).musician.writeToFile(filename);
+		++idx;
+	}
+	printf("Created %u files.\n", idx);
+}

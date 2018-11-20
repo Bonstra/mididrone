@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <cstring>
+#include <set>
+#include <list>
+#include <memory>
 #include <allegro.h>
 #include "musician.hpp"
 
@@ -43,6 +46,39 @@ protected:
 private:
 	void final_note_on(const Alg_note_ptr note);
 	void final_note_off(const Alg_note_ptr note);
+};
+
+struct PriorityChannelRule {
+	unsigned int priority;
+	std::set<unsigned int> channels;
+	bool exclusive;
+};
+
+class PriorityChannelDispatcher : public Dispatcher
+{
+	struct RuledMusician {
+		std::unique_ptr<PriorityChannelRule> rule;
+		Musician musician;
+
+		RuledMusician(unsigned int polyphony, PriorityChannelRule* rule=nullptr);
+		bool operator<(const RuledMusician& b);
+	};
+private:
+	bool playNoteByTheRules(const Alg_event_ptr evt);
+	bool playNoteFifo(const Alg_event_ptr evt);
+protected:
+	unsigned int polyphony;
+	std::list<RuledMusician> musicians;
+public:
+	PriorityChannelDispatcher(unsigned int polyphony);
+	virtual ~PriorityChannelDispatcher();
+
+	virtual void playNote(const Alg_event_ptr evt);
+	virtual void stopNote(const Alg_event_ptr evt);
+	virtual void finalize();
+
+	void appendRule(unsigned int priority, std::set<unsigned int> channels,
+			bool exclusive=false);
 };
 
 #endif
